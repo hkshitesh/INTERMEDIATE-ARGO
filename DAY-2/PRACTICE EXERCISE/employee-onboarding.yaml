@@ -1,0 +1,154 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+
+metadata:
+  generateName: employee-onboarding-
+
+spec:
+  entrypoint: main
+
+  templates:
+
+  - name: main
+    steps:
+
+    # Generate employee details
+    - - name: generate-data
+        template: producer
+
+    # Run three departments in parallel
+    - - name: hr-verification
+        template: hr
+        arguments:
+          parameters:
+          - name: employeeid
+            value: "{{steps.generate-data.outputs.parameters.employeeid}}"
+          - name: employee
+            value: "{{steps.generate-data.outputs.parameters.employee}}"
+
+      - name: department-assignment
+        template: department
+        arguments:
+          parameters:
+          - name: employee
+            value: "{{steps.generate-data.outputs.parameters.employee}}"
+          - name: department
+            value: "{{steps.generate-data.outputs.parameters.department}}"
+
+      - name: location-allocation
+        template: location
+        arguments:
+          parameters:
+          - name: employee
+            value: "{{steps.generate-data.outputs.parameters.employee}}"
+          - name: location
+            value: "{{steps.generate-data.outputs.parameters.location}}"
+
+    # Final summary
+    - - name: account-summary
+        template: summary
+        arguments:
+          parameters:
+          - name: employeeid
+            value: "{{steps.generate-data.outputs.parameters.employeeid}}"
+          - name: employee
+            value: "{{steps.generate-data.outputs.parameters.employee}}"
+          - name: department
+            value: "{{steps.generate-data.outputs.parameters.department}}"
+          - name: location
+            value: "{{steps.generate-data.outputs.parameters.location}}"
+
+  # Producer Template
+  - name: producer
+    script:
+      image: alpine:3.20
+      command: [sh]
+      source: |
+        echo -n "EMP101" > /tmp/id.txt
+        echo -n "Rahul" > /tmp/name.txt
+        echo -n "DevOps" > /tmp/dept.txt
+        echo -n "Bangalore" > /tmp/location.txt
+
+    outputs:
+      parameters:
+      - name: employeeid
+        valueFrom:
+          path: /tmp/id.txt
+
+      - name: employee
+        valueFrom:
+          path: /tmp/name.txt
+
+      - name: department
+        valueFrom:
+          path: /tmp/dept.txt
+
+      - name: location
+        valueFrom:
+          path: /tmp/location.txt
+
+  # HR Template
+  - name: hr
+    inputs:
+      parameters:
+      - name: employeeid
+      - name: employee
+
+    container:
+      image: alpine:3.20
+      command: [sh, -c]
+      args:
+        - |
+          echo "HR Verification"
+          echo "Employee ID: {{inputs.parameters.employeeid}}"
+          echo "Employee Name: {{inputs.parameters.employee}}"
+
+  # Department Template
+  - name: department
+    inputs:
+      parameters:
+      - name: employee
+      - name: department
+
+    container:
+      image: alpine:3.20
+      command: [sh, -c]
+      args:
+        - |
+          echo "Department Assignment"
+          echo "{{inputs.parameters.employee}} assigned to {{inputs.parameters.department}}"
+
+  # Location Template
+  - name: location
+    inputs:
+      parameters:
+      - name: employee
+      - name: location
+
+    container:
+      image: alpine:3.20
+      command: [sh, -c]
+      args:
+        - |
+          echo "Office Allocation"
+          echo "{{inputs.parameters.employee}} will work from {{inputs.parameters.location}}"
+
+  # Summary Template
+  - name: summary
+    inputs:
+      parameters:
+      - name: employeeid
+      - name: employee
+      - name: department
+      - name: location
+
+    container:
+      image: alpine:3.20
+      command: [sh, -c]
+      args:
+        - |
+          echo "Employee Account Summary"
+          echo "ID: {{inputs.parameters.employeeid}}"
+          echo "Name: {{inputs.parameters.employee}}"
+          echo "Department: {{inputs.parameters.department}}"
+          echo "Location: {{inputs.parameters.location}}"
