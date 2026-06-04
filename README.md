@@ -14,3 +14,8 @@ https://drive.google.com/drive/folders/10qoPRmj3WTDVbJgT78QSlCdm5xdeYYGf?usp=sha
 ## QUIZ 2 Leadboard
 
 <img width="1273" height="720" alt="image" src="https://github.com/user-attachments/assets/9397f462-a7cd-4ee5-ba5c-9dfd834d202e" />
+
+## QUIZ 3 Leadboard
+
+<img width="1026" height="608" alt="image" src="https://github.com/user-attachments/assets/39477d68-626b-448e-bd90-565ee8ae79a2" />
+
